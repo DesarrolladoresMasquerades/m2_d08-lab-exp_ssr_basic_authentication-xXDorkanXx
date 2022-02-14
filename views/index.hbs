@@ -5,5 +5,15 @@
 <p>{{signupMessage}}</p>
 {{/if}}
 
+{{#if errorMessage}}
+<p>{{errorMessage}}</p>
+{{/if}}
+
 <a href="http://localhost:3000/auth/signup">Sign up</a>
 <a href="http://localhost:3000/auth/login">Login</a>
+<a href="http://localhost:3000/auth/main">Main</a>
+<a href="http://localhost:3000/auth/private">Private</a>
+
+<form action="/auth/logout" method="GET">
+  <button type="submit">Logout</button>
+</form>

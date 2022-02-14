@@ -61,7 +61,7 @@ router.route("/login")
 
 		if(isPwdCorrect){
 			req.session.currentUserId = user._id;
-			res.redirect("/auth/profile");
+			res.render("index", {signupMessage: "You logged succefully!"});
 		}else{
 			throw new Error("Incorrect credentials!");
 		}
@@ -72,11 +72,32 @@ router.route("/login")
 	
 });
 
-router.get('/profile', (req, res) => {
-	const id = req.session.currentUserId;
-	User.findById(id)
-	.then((user)=>res.render("profile", user))
-	.catch((err)=>console.log(err));
+router.get("/main", (req, res)=>{
+    const id = req.session.currentUserId;
+    User.findById(id)
+	.then((user)=>{
+        if(!user){throw new Error("Validation error!")};
+        res.render("main", user);
+    })
+	.catch((err)=>{
+        res.render("index", {errorMessage: err})});
 });
+
+router.get("/private", (req, res)=>{
+    const id = req.session.currentUserId;
+    User.findById(id)
+	.then((user)=>{
+        if(!user){throw new Error("Validation error!")};
+        res.render("private", user);
+    })
+	.catch((err)=>{
+        res.render("index", {errorMessage: err})});
+});
+
+router.get("/logout", (req, res)=>{
+	req.session.destroy((err)=>{
+		res.render("index", {signupMessage: "You logged out succefully!"});
+	});
+})
 
 module.exports = router;
