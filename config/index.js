@@ -9,6 +9,10 @@ const logger = require("morgan");
 // https://www.npmjs.com/package/cookie-parser
 const cookieParser = require("cookie-parser");
 
+const session = require("express-session");
+
+const MongoStore = require("connect-mongo");
+
 // ℹ️ Serves a custom favicon on each request
 // https://www.npmjs.com/package/serve-favicon
 const favicon = require("serve-favicon");
@@ -26,6 +30,19 @@ module.exports = (app) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
+
+  app.use(session({
+    secret: process.env.COOKIE_SECRET,
+    saveUninitialized: false,
+    resave: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 24 * 60 * 60
+    }),
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, //one day old
+    }
+  }));
 
   // Normalizes the path to the views folder
   app.set("views", path.join(__dirname, "..", "views"));
