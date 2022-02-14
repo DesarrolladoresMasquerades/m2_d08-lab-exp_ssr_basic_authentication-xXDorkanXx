@@ -13,18 +13,21 @@ router.route('/signup')
 	const username = req.body.username;
 	let password = req.body.password;
 
-	if(!username || !password) res.render("signup", {errorMessage: "All fields are required"});
+	if(!username || !password) {
+        res.render("signup", {errorMessage: "All fields are required"});
+        throw new Error("Validation error!");
+    };
 
 	User.findOne({username})
 	.then(user=>{
 		if(user && user.username){
 			throw new Error("User already taken!")
 		};
-		
-		const salt = bcrypt.genSaltSync(saltRounds);
-		password = bcrypt.hashSync(password, salt);
 
-		User.create({username, password})
+		User.create({
+            username,
+            password:  bcrypt.hashSync(password, bcrypt.genSaltSync(saltRounds))
+        })
 		.then(()=>{res.render("index", {signupMessage: "You sign up succefully!"})})
 		.catch((err)=>{
 			console.log(err);
@@ -33,6 +36,47 @@ router.route('/signup')
 	.catch((err)=>{
 		res.render("signup", {errorMessage: err});
 	})
+});
+
+router.route("/login")
+.get((req, res) => {
+  res.render("login");
+})
+.post((req, res)=>{
+	const username = req.body.username;
+	let password = req.body.password;
+
+	if (!username || !password) {
+        res.render("login", { errorMessage: "All fields are required" });
+        throw new Error("Validation error!");
+    };
+
+	User.findOne({username})
+	.then(user=>{
+		if(!user){
+			throw new Error("Incorrect credentials!");
+		}
+
+		const isPwdCorrect = bcrypt.compareSync(password, user.password);
+
+		if(isPwdCorrect){
+			req.session.currentUserId = user._id;
+			res.redirect("/auth/profile");
+		}else{
+			throw new Error("Incorrect credentials!");
+		}
+	})
+	.catch((err)=>{
+		res.render("login", {errorMessage: err});
+	})
+	
+});
+
+router.get('/profile', (req, res) => {
+	const id = req.session.currentUserId;
+	User.findById(id)
+	.then((user)=>res.render("profile", user))
+	.catch((err)=>console.log(err));
 });
 
 module.exports = router;
